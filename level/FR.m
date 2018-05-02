@@ -1,4 +1,4 @@
-function [y, reInfo] = FR(f, g_func, line_method, theta, X, lineFunc, varargin)
+function [y, reInfo] = FR(f, line_method, theta, X, varargin)
 % 该函数使用 FR 算法求解x*.
 %
 % 调用
@@ -35,20 +35,16 @@ function [y, reInfo] = FR(f, g_func, line_method, theta, X, lineFunc, varargin)
 % Coder:    Su LiHui
 numOfvalue  = length(X);
 var_x = num2cell(sym('x',[1, numOfvalue]));
-cell_x =  num2cell(X);
 
 % 计算一阶导数
-g = g_func;
-disp('一阶导数计算完毕');
-
 x0 = X;
-g0 = double(subs(g, var_x, cell_x));
+[y0, g0] = f(x0, varargin{:});
 d0 = -g0;
 
 % 计算alph-k
 Point = X;
 if ~line_method.inextract
-    [~, right] = JinTui(f, Point, dk0, line_method.step);
+    [~, right] = L_JinTui(f, Point, d0, line_method.step);
 else
     right = line_method.inextract;
 end
@@ -58,31 +54,34 @@ Rule.mthd = line_method.mthd;
 if ~line_method.opt
     Rule.opt = [line_method.opt, right , line_method.max_iter, 0.05];
 else
-    Rule.opt = [line_method.opt, right , line_method.max_iter, 0.95, 0.05];
+    Rule.opt = [line_method.opt, right , line_method.max_iter, 0.85, 0.15];
 end
-Step = dk0';
-[StepSize, info_search, ~] = bolinesearch(lineFunc, BeginPoint, Step, Rule, varargin{:});
+Step = d0;
+[StepSize, info_search, perf] = bolinesearch(f, BeginPoint, Step, Rule, varargin{:});
 % alph = minValue(f, x0, d0);
 alph = StepSize;
 % 迭代计算
 iter_num = info_search(2);
 feva_num = info_search(3);
 
-x1 = x0 + alph * d0;
-g1 = double(subs(g, var_x, num2cell(x1)));
+x1 = perf.x;
+g1 = perf.g;
 
 % 迭代
 gk = g1;
 gk_1 = g0;
 xk_1 = x1;
 dk_1 = d0;
+yk_1 = perf.F;
 k = 1;
 while norm(gk_1, 2) > theta
     fprintf('Iter %d:   Alph_k = %f,\n', k, alph );
     disp('Xk= ');
     disp(double(xk_1));
     disp('gk= ');
-    disp(double(gk));
+    disp(double(gk_1));
+    disp('yk= ');
+    disp(double(yk_1));
     betak_1 = (gk*gk') / (gk_1*gk_1');
     disp('beta_k-1= ');
     disp(double(betak_1));
@@ -92,7 +91,7 @@ while norm(gk_1, 2) > theta
     % 计算
     Point = xk_1;
     if ~line_method.inextract
-        [~, right] = JinTui(f, Point, dk, line_method.step);
+        [~, right] = L_JinTui(f, Point, dk, line_method.step);
     else
         right = line_method.inextract;
     end
@@ -102,8 +101,8 @@ while norm(gk_1, 2) > theta
     else
         Rule.opt = [line_method.opt, right , line_method.max_iter, 0.95, 0.05];
     end
-    Step = dk';
-    [StepSize, info_search, ~] = bolinesearch(lineFunc, BeginPoint, Step, Rule, varargin{:});
+    Step = dk;
+    [StepSize, info_search, perf] = bolinesearch(f, BeginPoint, Step, Rule, varargin{:});
 %     alph = minValue(f, xk_1, dk);
     alph = StepSize;
 
@@ -113,21 +112,29 @@ while norm(gk_1, 2) > theta
 %     alph = double(subs(f_alph, {'A','B','C','D'}, input);
 
     % 保存xk 到xk_1
-    xk = xk_1 + alph * dk;
+    xk = perf.x;
     xk_1 = xk; % 保存x2
+    yk = perf.F;
+      
     % 下一次计算
     gk_1 = gk;
     dk_1 = dk;
-    gk = double(subs(g, var_x, num2cell(xk)));
-    
+    gk = perf.g;   
     
     % 信息计算
     iter_num = iter_num + info_search(2);
     feva_num = feva_num + info_search(3);
     k = k + 1;
+    if abs(yk - yk_1) < theta
+        disp('Over');
+        break;
+    else
+        yk_1 = yk;
+    end
+
 end
 
-y =  double(subs(f, var_x, num2cell(xk)));
+y =  yk_1;
 reInfo.all = k;
 reInfo.iter = iter_num;
 reInfo.feva_num = feva_num;

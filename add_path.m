@@ -9,7 +9,7 @@ function paths = add_path()
 % - paths (cell): A list of all paths.
 
 script_directory = fileparts(mfilename('fullpath'));
-include_dirs = cellfun(@(x) fullfile(script_directory, x), {'', 'basic', 'linner', 'solution','level', 'solution-2'}, 'UniformOutput', false);
+include_dirs = cellfun(@(x) fullfile(script_directory, x), {'', 'basic', 'linner', 'solution','level', 'solution-2', 'parallel_solution_2'}, 'UniformOutput', false);
 
 if exist(fullfile(script_directory, 'native'), 'dir')
    include_dirs{end+1} = fullfile(script_directory, 'native');

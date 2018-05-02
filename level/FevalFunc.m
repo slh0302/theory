@@ -1,5 +1,5 @@
 % line search Function
-function [F, g] = Func(X_value, func, nOfvar, g_func)
+function [F, g] = Func(X_value, func, nOfvar)
 % 返回线搜索的所需的X点处的函数值
 % 调用
 % [F,g] = Func Func(X_value, func, nOfvar)
@@ -13,9 +13,5 @@ function [F, g] = Func(X_value, func, nOfvar, g_func)
 %     g: X_value处的导数值
 % Create:   2018.04.17
 % Coder:    Su LiHui
-    if nargin == 3
-        g_func = 1;
-    end
-    F = double(subs(func, num2cell(sym('x',[1, nOfvar])), num2cell(X_value)));
-    g = double(subs(jacobian(func), num2cell(sym('x',[1, nOfvar])), num2cell(X_value)));
+    [F, g] = func(X_value, nOfvar);
 end
