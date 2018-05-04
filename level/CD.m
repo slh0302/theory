@@ -1,8 +1,8 @@
-function [y, reInfo] = PRP(f, line_method, theta, X, varargin)
+function [y, reInfo] = CD(f, line_method, theta, X, varargin)
 % 该函数使用 FR 算法求解x*.
 %
 % 调用
-%  [y, reInfo] = PRP(f, line_method, theta, X, @Func, f, numOfvar)
+%  [y, reInfo] = FR(f, line_method, theta, X, @Func, f, numOfvar)
 %
 % Input 
 % f:        已经定义的符号函数，例如 syms x1,x2; f = x1^2 + x2^2;
@@ -34,7 +34,6 @@ function [y, reInfo] = PRP(f, line_method, theta, X, varargin)
 % Create:   2018.04.17
 % Coder:    Su LiHui
 numOfvalue  = length(X);
-var_x = num2cell(sym('x',[1, numOfvalue]));
 
 % 计算一阶导数
 x0 = X;
@@ -79,9 +78,10 @@ while norm(gk_1, 2) > theta
     disp('Xk= ');
     disp(double(xk_1));
     disp('gk= ');
-    disp(double(gk));
-    % PRP 方法的更新结果
-    betak_1 = (gk*(gk' - gk_1')) / (gk_1*gk_1');
+    disp(double(gk_1));
+    disp('yk= ');
+    disp(double(yk_1));
+    betak_1 = - (gk*gk') / (dk_1*gk_1');
     disp('beta_k-1= ');
     disp(double(betak_1));
 
